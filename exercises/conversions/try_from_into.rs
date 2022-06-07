@@ -1,3 +1,4 @@
+#![feature(result_flattening)]
 // try_from_into.rs
 // TryFrom is a simple and safe type conversion that may fail in a controlled way under some circumstances.
 // Basically, this is the same as From. The main difference is that this should return a Result type
@@ -36,6 +37,13 @@ enum IntoColorError {
 impl TryFrom<(i16, i16, i16)> for Color {
     type Error = IntoColorError;
     fn try_from(tuple: (i16, i16, i16)) -> Result<Self, Self::Error> {
+        // let r0 = tuple.0.try_into();
+        // let r1 = tuple.1.try_into();
+        // let r2 = tuple.2.try_into();
+        // r0.and_then(|a0| r1.and_then(|a1| r2.and_then(|a2| Ok((a0, a1, a2)))))
+        //     .map_err(|_| IntoColorError::IntConversion)
+        //     .map(|a| Color {red: a.0, green: a.1, blue: a.2})
+        Self::try_from([tuple.0, tuple.1, tuple.2])
     }
 }
 
@@ -43,6 +51,12 @@ impl TryFrom<(i16, i16, i16)> for Color {
 impl TryFrom<[i16; 3]> for Color {
     type Error = IntoColorError;
     fn try_from(arr: [i16; 3]) -> Result<Self, Self::Error> {
+        let r0 = arr[0].try_into();
+        let r1 = arr[1].try_into();
+        let r2 = arr[2].try_into();
+        r0.and_then(|a0| r1.and_then(|a1| r2.and_then(|a2| Ok((a0, a1, a2)))))
+            .map_err(|_| IntoColorError::IntConversion)
+            .map(|a| Color {red: a.0, green: a.1, blue: a.2})
     }
 }
 
@@ -50,6 +64,10 @@ impl TryFrom<[i16; 3]> for Color {
 impl TryFrom<&[i16]> for Color {
     type Error = IntoColorError;
     fn try_from(slice: &[i16]) -> Result<Self, Self::Error> {
+        if slice.len() != 3 {
+            return Err(IntoColorError::BadLen);
+        }
+        Self::try_from([slice[0], slice[1], slice[2]])
     }
 }
 

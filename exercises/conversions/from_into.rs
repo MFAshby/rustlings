@@ -32,11 +32,20 @@ impl Default for Person {
 // 5. Extract the other element from the split operation and parse it into a `usize` as the age
 // If while parsing the age, something goes wrong, then return the default of Person
 // Otherwise, then return an instantiated Person object with the results
-
-// I AM NOT DONE
-
 impl From<&str> for Person {
     fn from(s: &str) -> Person {
+        // if no separators, fall back
+        s.split_once(",")
+            // No empty names
+            .filter(|(name_str, age_str)| *name_str != "" )
+            // Parse the age as a usize
+            .and_then(|(name_str, age_str)| age_str.parse::<usize>().ok().map(|age| (name_str, age)) )
+            // Own the name
+            .map(|(name_str, age)| (String::from(name_str), age) )
+            // Make the struct
+            .map(|(name,age)| Person{name, age} )
+            // as it says on the tin...
+            .unwrap_or_default()
     }
 }
 
